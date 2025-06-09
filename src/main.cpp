@@ -3,10 +3,22 @@
 #include "dialog.hpp"
 #include "carousel.hpp"
 
+using namespace GUI;
+using namespace HAL;
+
+static void lv_event_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code == LV_EVENT_CLICKED) 
+    {
+        uint8_t bat = hal()->getBatLevel();
+    	printf("Batt: %d\n", bat);
+    }
+}
+
 extern "C" void app_main()
 {
-    using namespace GUI;
-    using namespace HAL;
+    
     GUI::begin();
 
     WindowConf conf = {
@@ -17,14 +29,11 @@ extern "C" void app_main()
     };
     Window win(conf);
     Carousel car(win);
-
-    car.addItem("Clock", [](lv_event_t *){ printf("Clock\n"); });
-    car.addItem("Settings",[](lv_event_t *){ printf("Settings\n"); });
-    car.addItem("Apps", [](lv_event_t *){ printf("Apps\n"); });
-    car.addItem("Info", [](lv_event_t *){ printf("Info\n"); });
-
+    car.addItem("Clock", &lv_event_cb);
+    car.addItem("Settings", lv_event_cb);
+    car.addItem("Apps", lv_event_cb);
+    car.addItem("Info", lv_event_cb);
     win.show();
-    car.focus(0); // Focalizza il primo elemento del carosello
 
     while(true)
     {

@@ -19,17 +19,15 @@ void HalCardputer::_display_init()
 {
     _display = new M5GFX;
     _display->init();
-    // _display->setRotation(1);
-
     // Canvas
-    _canvas = new LGFX_Sprite(_display);
+    /*_canvas = new LGFX_Sprite(_display);
     _canvas->createSprite(204, 109);
 
     _canvas_keyboard_bar = new LGFX_Sprite(_display);
     _canvas_keyboard_bar->createSprite(_display->width() - _canvas->width(), display()->height());
 
     _canvas_system_bar = new LGFX_Sprite(_display);
-    _canvas_system_bar->createSprite(_canvas->width(), _display->height() - _canvas->height());
+    _canvas_system_bar->createSprite(_canvas->width(), _display->height() - _canvas->height());*/
 }
 
 void HalCardputer::_keyboard_init()
@@ -86,8 +84,8 @@ void HalCardputer::init()
 {
     _display_init();
     _keyboard_init();
-    _speaker_init();
-    _mic_init();
+    //_speaker_init();
+    //_mic_init();
     _button_init();
     _bat_init();
     _sdcard_init();
@@ -108,70 +106,4 @@ uint8_t HalCardputer::getBatLevel()
     else
         result = 0;
     return result;
-}
-
-void HalCardputer::MicTest(HalCardputer* hal)
-{
-    int16_t mic_buffer[256];
-
-    while (1)
-    {
-        hal->mic()->record(mic_buffer, 256);
-        while (hal->mic()->isRecording())
-        {
-            vTaskDelay(5);
-        }
-
-        for (int i = 0; i < 256; i++)
-            printf("m:%d\n", mic_buffer[i]);
-    }
-}
-
-//#include "../apps/utils/boot_sound/boot_sound_1.h"
-//#include "../apps/utils/boot_sound/boot_sound_2.h"
-
-void HalCardputer::SpeakerTest(HalCardputer* hal)
-{
-    hal->Speaker()->setVolume(128);
-    
-    while (1)
-    {
-        //hal->Speaker()->playWav(boot_sound_1, sizeof(boot_sound_1));
-        while (hal->Speaker()->isPlaying())
-            delay(5);
-        delay(1000);
-
-        //hal->Speaker()->playWav(boot_sound_2, sizeof(boot_sound_2));
-        while (hal->Speaker()->isPlaying())
-            delay(5);
-        delay(1000);
-    }
-}
-
-void HalCardputer::LcdBgLightTest(HalCardputer* hal)
-{
-    hal->display()->setTextSize(3);
-
-    std::vector<int> color_list = {TFT_RED, TFT_GREEN, TFT_BLUE};
-    for (auto i : color_list)
-    {
-        hal->display()->fillScreen(i);
-
-        for (int i = 0; i < 256; i++)
-        {
-            hal->display()->setCursor(0, 0);
-            hal->display()->printf("%d", i);
-            hal->display()->setBrightness(i);
-            delay(20);
-        }
-        delay(1000);
-
-        for (int i = 255; i >= 0; i--)
-        {
-            hal->display()->setCursor(0, 0);
-            hal->display()->printf("%d", i);
-            hal->display()->setBrightness(i);
-            delay(20);
-        }
-    }
 }

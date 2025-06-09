@@ -11,12 +11,13 @@
 #pragma once
 #include "M5GFX.h"
 #include "keyboard/keyboard.h"
+#include "utility/Speaker_Class.hpp"
 #include "mic/Mic_Class.hpp"
-#include "speaker/Speaker_Class.hpp"
 #include "button/Button.h"
 #include "sdcard/sdcard.h"
 #include <iostream>
 #include <string>
+
 
 namespace HAL
 {
@@ -28,9 +29,9 @@ namespace HAL
     {
     protected:
         LGFX_Device* _display;
-        LGFX_Sprite* _canvas;
-        LGFX_Sprite* _canvas_system_bar;
-        LGFX_Sprite* _canvas_keyboard_bar;
+        //LGFX_Sprite* _canvas;
+        //LGFX_Sprite* _canvas_system_bar;
+        //LGFX_Sprite* _canvas_keyboard_bar;
 
         KEYBOARD::Keyboard* _keyboard;
         m5::Mic_Class* _mic;
@@ -42,7 +43,7 @@ namespace HAL
 
     public:
         Hal()
-            : _display(nullptr), _canvas(nullptr), _canvas_system_bar(nullptr), _canvas_keyboard_bar(nullptr),
+            : _display(nullptr), //_canvas(nullptr), _canvas_system_bar(nullptr), _canvas_keyboard_bar(nullptr),
               _keyboard(nullptr), _mic(nullptr), _speaker(nullptr), _homeButton(nullptr), _sdcard(nullptr),
               _sntp_adjusted(false)
         {
@@ -50,9 +51,9 @@ namespace HAL
 
         // Getter
         inline LGFX_Device* display() { return _display; }
-        inline LGFX_Sprite* canvas() { return _canvas; }
-        inline LGFX_Sprite* canvas_system_bar() { return _canvas_system_bar; }
-        inline LGFX_Sprite* canvas_keyboard_bar() { return _canvas_keyboard_bar; }
+        //inline LGFX_Sprite* canvas() { return _canvas; }
+        //inline LGFX_Sprite* canvas_system_bar() { return _canvas_system_bar; }
+        //inline LGFX_Sprite* canvas_keyboard_bar() { return _canvas_keyboard_bar; }
         inline KEYBOARD::Keyboard* keyboard() { return _keyboard; }
         inline m5::Mic_Class* mic() { return _mic; }
         inline m5::Speaker_Class* Speaker() { return _speaker; }
@@ -63,9 +64,9 @@ namespace HAL
         inline bool isSntpAdjusted(void) { return _sntp_adjusted; }
 
         // Canvas
-        inline void canvas_system_bar_update() { _canvas_system_bar->pushSprite(_canvas_keyboard_bar->width(), 0); }
-        inline void canvas_keyboard_bar_update() { _canvas_keyboard_bar->pushSprite(0, 0); }
-        inline void canvas_update() { _canvas->pushSprite(_canvas_keyboard_bar->width(), _canvas_system_bar->height()); }
+        //inline void canvas_system_bar_update() { _canvas_system_bar->pushSprite(_canvas_keyboard_bar->width(), 0); }
+        //inline void canvas_keyboard_bar_update() { _canvas_keyboard_bar->pushSprite(0, 0); }
+        //inline void canvas_update() { _canvas->pushSprite(_canvas_keyboard_bar->width(), _canvas_system_bar->height()); }
 
         // Override
         virtual std::string type() { return "null"; }

@@ -25,8 +25,7 @@ public:
              uint16_t item_sz = 60,
              uint16_t gap     = 20)
     {
-        container = win.container;
-
+        container = lv_obj_create(win.container);
         /*-- Layout flex orizzontale --*/
         lv_obj_set_flex_flow(container, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(container, LV_FLEX_ALIGN_CENTER,
@@ -41,6 +40,9 @@ public:
         lv_obj_set_scroll_dir(container, LV_DIR_HOR);
         lv_obj_set_scroll_snap_x(container, LV_SCROLL_SNAP_CENTER);
         lv_obj_add_flag(container, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+        lv_obj_set_size(container, LV_HOR_RES, item_sz);
+        lv_obj_align_to(container, win.container, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_scrollbar_mode(container, LV_SCROLLBAR_MODE_OFF);
     }
 
     /**

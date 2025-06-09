@@ -17,7 +17,7 @@
 #define LV_TICK_CUSTOM_INCLUDE "esp_timer.h"
 #define LV_TICK_CUSTOM_SYS_TIME_EXPR ((esp_timer_get_time() / 1000LL))
 
-#define LV_REFR_PERIOD 10 // 10 ms
+#define LV_REFR_PERIOD 5 // 10 ms
 
 #define LV_USE_DRAW_SW       1
 #define LV_USE_LABEL         1
@@ -41,6 +41,6 @@
 #define LV_LOG_PRINTF 1
 #define LV_USE_ASSERT_MEM          1   // assetti su allocazioni fallite
 #define LV_USE_ASSERT_NULL         1   // punteri nulli
-#define LV_USE_ASSERT_STYLE        1   // stili non validi
+#define LV_USE_ASSERT_STYLE        0   // stili non validi
 
 #endif // LV_CONF_H

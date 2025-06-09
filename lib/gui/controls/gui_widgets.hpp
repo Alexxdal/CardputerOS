@@ -59,6 +59,8 @@ public:
         lv_obj_set_style_pad_all(container, 0, 0);
         lv_obj_set_style_border_width(container, 0, 0);
         lv_obj_set_scrollbar_mode(container, LV_SCROLLBAR_MODE_OFF);
+        lv_obj_set_style_bg_color(container, lv_color_hex(conf.bg_color), 0);
+        lv_obj_set_style_bg_grad_color(container, lv_color_hex(conf.bg_color_gradient), 0);
     }
 
     Window(const char *title) 
