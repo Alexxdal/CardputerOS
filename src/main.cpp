@@ -6,6 +6,7 @@
 extern "C" void app_main()
 {
     using namespace GUI;
+    using namespace HAL;
     GUI::begin();
 
     WindowConf conf = {
@@ -22,7 +23,7 @@ extern "C" void app_main()
     car.addItem("Apps", [](lv_event_t *){ printf("Apps\n"); });
     car.addItem("Info", [](lv_event_t *){ printf("Info\n"); });
 
-    win.update();
+    win.show();
     car.focus(0); // Focalizza il primo elemento del carosello
 
     while(true)

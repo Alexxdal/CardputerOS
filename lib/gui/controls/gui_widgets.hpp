@@ -77,7 +77,7 @@ public:
         return false;
     }
 
-    void update() 
+    void show() 
     { 
         lv_scr_load(screen);
     }

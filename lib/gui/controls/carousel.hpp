@@ -40,7 +40,6 @@ public:
         /*-- Scroll --*/
         lv_obj_set_scroll_dir(container, LV_DIR_HOR);
         lv_obj_set_scroll_snap_x(container, LV_SCROLL_SNAP_CENTER);
-        lv_obj_set_scrollbar_mode(container, LV_SCROLLBAR_MODE_ACTIVE);
         lv_obj_add_flag(container, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     }
 

@@ -3,87 +3,110 @@
 #include <esp_task_wdt.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <M5GFX.h>
 
-namespace 
+using namespace HAL;
+
+namespace GUI {
+/* ---------- stato interno ---------- */
+bool         started  = false;
+TaskHandle_t guiTask  = nullptr;
+lv_disp_t   *lv_disp  = nullptr;
+HalCardputer Hal;
+
+/* ---------- flush callback ---------- */
+static void flush_cb(lv_disp_drv_t *disp, const lv_area_t *a, lv_color_t *p)
 {
-    /* ---------- stato interno ---------- */
-    bool         started  = false;
-    TaskHandle_t guiTask  = nullptr;
-    lv_disp_t   *lv_disp  = nullptr;
+    uint16_t w = a->x2 - a->x1 + 1;
+    uint16_t h = a->y2 - a->y1 + 1;
+    Hal.display()->pushImageDMA(a->x1, a->y1, w, h, (lgfx::rgb565_t *)p);
+    lv_disp_flush_ready(disp);
+}
 
-    /* ---------- flush callback ---------- */
-    static void flush_cb(lv_disp_drv_t *disp, const lv_area_t *a, lv_color_t *p)
+/* ---------- tastiera Cardputer → LVGL ---------- */
+static void kb_read(lv_indev_drv_t *, lv_indev_data_t *d)
+{
+    static uint32_t last_key = 0;
+    auto *kb = Hal.keyboard();
+    auto &state = kb->keysState();
+
+    if (kb->isChanged() && kb->isPressed()) 
     {
-        uint16_t w = a->x2 - a->x1 + 1;
-        uint16_t h = a->y2 - a->y1 + 1;
-        M5Cardputer.Display.pushImageDMA(a->x1, a->y1, w, h, (lgfx::rgb565_t *)p);
-        lv_disp_flush_ready(disp);
-    }
-
-    /* ---------- tastiera Cardputer → LVGL ---------- */
-    static void kb_read(lv_indev_drv_t *, lv_indev_data_t *d)
-    {
-        static uint32_t last = 0;
-        auto &state = M5Cardputer.Keyboard.keysState();
-
-        if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isPressed()) 
+        if (!state.values.empty()) 
         {
-            if (!state.word.empty()) 
+            if(state.fn)
             {
-                /* 1) c’è un carattere stampabile → prendi il 1° */
-                last = (uint8_t)state.word.front();
-            }
-            else if (!state.hid_keys.empty()) 
-            {
-                /* 2) altrimenti prendi il 1° HID (BACKSPACE, ENTER, ecc.) */
-                uint8_t hid = state.hid_keys.front();
-                switch (hid) {
-                    case KEY_ENTER:     last = LV_KEY_ENTER; break;
-                    case KEY_BACKSPACE: last = LV_KEY_BACKSPACE; break;
-                    case KEY_TAB:       last = LV_KEY_NEXT; break;       /* o LV_KEY_PREV */
-                    /* ... altri mapping se ti servono ... */
-                    default:            last = 0; break;
+                if(state.values.front() == ','){
+                    last_key = LV_KEY_LEFT;
                 }
+                else if(state.values.front() == '.'){
+                    last_key = LV_KEY_DOWN;
+                }
+                else if(state.values.front() == '/'){
+                    last_key = LV_KEY_RIGHT;
+                }
+                else if(state.values.front() == ';'){
+                    last_key = LV_KEY_UP;
+                } 
+            } 
+            else {
+                // 3) Carattere stampabile → prendi il primo
+                last_key = static_cast<uint8_t>(state.values.front());
             }
-            else 
-            {
-                last = 0;
+        }
+        else if (!state.hidKey.empty()) {
+            // 2) Tasti speciali HID → prendi il primo e mappa
+            uint8_t hid = static_cast<uint8_t>(state.hidKey.front());
+            switch (hid) {
+                case KEY_ENTER:     last_key = LV_KEY_ENTER;     break;
+                case KEY_BACKSPACE: last_key = LV_KEY_BACKSPACE; break;
+                case KEY_TAB:       last_key = LV_KEY_NEXT;      break;
+                case KEY_LEFT:      last_key = LV_KEY_LEFT;      break;
+                case KEY_RIGHT:     last_key = LV_KEY_RIGHT;     break;
+                case KEY_UP:        last_key = LV_KEY_UP;        break;
+                case KEY_DOWN:      last_key = LV_KEY_DOWN;      break;
+                case KEY_HOME:      last_key = LV_KEY_HOME;      break;
+                // Aggiungi altri mapping HID se necessari
+                default:            last_key = 0;                break;
             }
-            d->state = LV_INDEV_STATE_PRESSED;
-            d->key   = last;
         }
         else {
-            d->state = LV_INDEV_STATE_RELEASED;
-            d->key   = last;
+            if(state.tab) {
+                last_key = LV_KEY_NEXT;
+            }
+            else {
+                last_key = 0;
+            }
         }
+        d->state = LV_INDEV_STATE_PRESSED;
+        d->key   = last_key;
+    } else {
+        // Rilascio del tasto (mantieni l'ultimo valore)
+        d->state = LV_INDEV_STATE_RELEASED;
+        d->key   = last_key;
     }
+}
 
-    /* ---------- task di servizio GUI ---------- */
-    static void gui_service(void *)
+/* ---------- task di servizio GUI ---------- */
+static void gui_service(void *)
+{
+    const TickType_t xDelay = pdMS_TO_TICKS(LV_REFR_PERIOD);
+    while (true) 
     {
-        const TickType_t xDelay = pdMS_TO_TICKS(LV_REFR_PERIOD);
-        while (true) 
-        {
-            lv_timer_handler();
-            M5Cardputer.update();
-            vTaskDelay(xDelay);
-        }
+        lv_timer_handler();
+        Hal.keyboard()->updateKeyList();
+        Hal.keyboard()->updateKeysState();
+        vTaskDelay(xDelay);
     }
+}
 }
 
 /* ===== API PUBLICA ================================================= */
 bool GUI::begin()
 {
     if (started) return true;
+    Hal.init();
 
-    auto cfg = M5.config();
-    M5Cardputer.begin(cfg, true);
-    M5Cardputer.Display.init();
-    M5Cardputer.Display.initDMA();
-    M5Cardputer.Display.setRotation(1);
-    M5Cardputer.Display.fillScreen(TFT_BLACK);
-
-    
     static lv_disp_draw_buf_t draw_buf; // buffer di disegno LVGL
     static lv_disp_drv_t disp_drv; // driver display → LVGL
     static lv_indev_drv_t kb_drv; // tastiera Cardputer → LVGL
@@ -124,5 +147,7 @@ void GUI::shutdown()
     started = false;
 }
 
-lv_disp_t *GUI::display() { return lv_disp; }
-M5GFX     &GUI::gfx()     { return M5Cardputer.Display; }
+HalCardputer *GUI::hal()
+{
+    return &Hal;
+}
