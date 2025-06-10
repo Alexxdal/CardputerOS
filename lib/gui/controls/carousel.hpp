@@ -94,7 +94,10 @@ public:
     void focus(uint32_t idx)
     {
         if(idx < items_.size())
+        {
             lv_obj_scroll_to_view_recursive(items_[idx], LV_ANIM_ON);
+            lv_group_focus_obj(items_[idx]);
+        }
     }
 
     /** Accesso diretto al contenitore LVGL. */

@@ -3,7 +3,6 @@
 #include <esp_task_wdt.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <M5GFX.h>
 
 using namespace HAL;
 
@@ -12,20 +11,23 @@ namespace GUI
     /* ---------- stato interno ---------- */
     bool         started  = false;
     TaskHandle_t guiTask  = nullptr;
-    lv_disp_t   *lv_disp  = nullptr;
+    static lv_display_t *lvDisplay  = nullptr;
+    static lv_indev_t *lvInput = nullptr;
+    static lv_group_t *kb_group = nullptr;
     HalCardputer Hal;
 
     /* ---------- flush callback ---------- */
-    static void flush_cb(lv_disp_drv_t *disp, const lv_area_t *a, lv_color_t *p)
+    static void flush_cb(lv_display_t *display, const lv_area_t *area, unsigned char *data)
     {
-        uint16_t w = a->x2 - a->x1 + 1;
-        uint16_t h = a->y2 - a->y1 + 1;
-        Hal.display()->pushImageDMA(a->x1, a->y1, w, h, (lgfx::rgb565_t *)p);
-        lv_disp_flush_ready(disp);
+        uint32_t w = lv_area_get_width(area);
+        uint32_t h = lv_area_get_height(area);
+        lv_draw_sw_rgb565_swap(data, w * h);
+        Hal.display()->pushImageDMA(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (uint16_t *)data);
+        lv_disp_flush_ready(display);
     }
 
     /* ---------- tastiera Cardputer → LVGL ---------- */
-    static void kb_read(lv_indev_drv_t *, lv_indev_data_t *d)
+    static void kb_read(lv_indev_t *indev_driver, lv_indev_data_t *data)
     {
         static uint32_t last_key = 0;
         auto *kb = Hal.keyboard();
@@ -79,14 +81,22 @@ namespace GUI
                     last_key = 0;
                 }
             }
-            d->state = LV_INDEV_STATE_PRESSED;
-            d->key   = last_key;
+            data->state = LV_INDEV_STATE_PRESSED;
+            data->key   = last_key;
+            printf("Key pressed");
         } else {
             // Rilascio del tasto (mantieni l'ultimo valore)
-            d->state = LV_INDEV_STATE_RELEASED;
-            d->key   = last_key;
+            data->state = LV_INDEV_STATE_RELEASED;
+            data->key   = last_key;
         }
+        data->continue_reading = false;
     }
+
+    static uint32_t lv_tick(void)
+    {
+        return esp_timer_get_time() / 1000;
+    }
+
 
     /* ---------- task di servizio GUI ---------- */
     static void gui_service(void *)
@@ -112,35 +122,26 @@ bool GUI::begin()
     if (started) return true;
     Hal.init();
 
-    static lv_disp_draw_buf_t draw_buf; // buffer di disegno LVGL
-    static lv_disp_drv_t disp_drv; // driver display → LVGL
-    static lv_indev_drv_t kb_drv; // tastiera Cardputer → LVGL
-
     lv_init();
-    static lv_color_t *buf1 = (lv_color_t*)heap_caps_malloc(LV_HOR_RES_MAX * 135 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    static uint8_t *buf1 = (uint8_t*)heap_caps_malloc(LV_HOR_RES_MAX * 135, MALLOC_CAP_DMA);
     assert(buf1);
-    static lv_color_t *buf2 = (lv_color_t*)heap_caps_malloc(LV_HOR_RES_MAX * 135 * sizeof(lv_color_t), MALLOC_CAP_DMA);
+    static uint8_t *buf2 = (uint8_t*)heap_caps_malloc(LV_HOR_RES_MAX * 135, MALLOC_CAP_DMA);
     assert(buf2);
 
-    lv_disp_draw_buf_init(&draw_buf, buf1, buf2, LV_HOR_RES_MAX * 135);
-    lv_disp_drv_init(&disp_drv);
-    disp_drv.hor_res  = LV_HOR_RES_MAX;
-    disp_drv.ver_res  = LV_VER_RES_MAX;
-    disp_drv.flush_cb = flush_cb;
-    disp_drv.draw_buf = &draw_buf;
-    lv_disp = lv_disp_drv_register(&disp_drv);
-
+    lv_tick_set_cb(lv_tick);
+    lvDisplay = lv_display_create(LV_HOR_RES_MAX, LV_VER_RES_MAX);
+    lv_display_set_color_format(lvDisplay, LV_COLOR_FORMAT_RGB565);
+    lv_display_set_flush_cb(lvDisplay, flush_cb);
+    lv_display_set_buffers(lvDisplay, buf1, buf2, LV_HOR_RES_MAX * 135, LV_DISPLAY_RENDER_MODE_PARTIAL);
     /* Driver tastiera → keypad */
-    lv_indev_drv_init(&kb_drv);
-    kb_drv.type    = LV_INDEV_TYPE_KEYPAD;
-    kb_drv.read_cb = kb_read;
-    lv_indev_t *kb = lv_indev_drv_register(&kb_drv);
-    lv_group_t *g  = lv_group_create();
-    lv_group_set_default(g);
-    lv_indev_set_group(kb, g);
+    kb_group = lv_group_create();
+    lv_group_set_default(kb_group);
+    lvInput = lv_indev_create();
+    lv_indev_set_type(lvInput, LV_INDEV_TYPE_KEYPAD);
+    lv_indev_set_read_cb(lvInput, kb_read);
+    lv_indev_set_group(lvInput, kb_group);
 
-    xTaskCreate(gui_service, "gui_service", 4096, nullptr, 7, &guiTask);
-
+    xTaskCreate(gui_service, "gui_service", 8192, nullptr, 7, &guiTask);
     started = true;
     return true;
 }

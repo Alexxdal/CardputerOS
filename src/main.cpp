@@ -34,6 +34,7 @@ extern "C" void app_main()
     car.addItem("Apps", lv_event_cb);
     car.addItem("Info", lv_event_cb);
     win.show();
+    car.focus(0);
 
     while(true)
     {

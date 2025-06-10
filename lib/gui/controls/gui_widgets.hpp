@@ -47,7 +47,7 @@ public:
     Window(const WindowConf &conf) 
     {
         screen = lv_obj_create(NULL);
-        window = lv_win_create(screen, conf.header_height);
+        window = lv_win_create(screen);
         if(conf.title)
             lv_win_add_title(window, conf.title);
 
@@ -65,7 +65,7 @@ public:
 
     Window(const char *title) 
     {
-        window = lv_win_create(lv_scr_act(), 20);
+        window = lv_win_create(lv_scr_act());
         if(title)
             lv_win_add_title(window, title);
     }
