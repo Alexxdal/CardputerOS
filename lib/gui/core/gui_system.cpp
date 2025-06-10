@@ -149,6 +149,7 @@ bool GUI::begin()
 void GUI::shutdown()
 {
     if (!started) return;
+    lv_deinit();
     vTaskDelete(guiTask);
     started = false;
 }
