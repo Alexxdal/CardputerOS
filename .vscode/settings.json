@@ -66,6 +66,8 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "bitset": "cpp",
+        "regex": "cpp"
     }
 }

@@ -50,7 +50,11 @@ namespace GUI
                     }
                     else if(state.values.front() == ';'){
                         last_key = LV_KEY_UP;
-                    } 
+                    }
+                    else if(state.values.front() == KEY_BACKSPACE)
+                    {
+                        last_key = LV_KEY_DEL;
+                    }
                 } 
                 else {
                     // 3) Carattere stampabile → prendi il primo
@@ -92,11 +96,11 @@ namespace GUI
         data->continue_reading = false;
     }
 
+    /* ---------- LVGL system tick callback -----------*/
     static uint32_t lv_tick(void)
     {
         return esp_timer_get_time() / 1000;
     }
-
 
     /* ---------- task di servizio GUI ---------- */
     static void gui_service(void *)
@@ -123,16 +127,17 @@ bool GUI::begin()
     Hal.init();
 
     lv_init();
-    static uint8_t *buf1 = (uint8_t*)heap_caps_malloc(LV_HOR_RES_MAX * 135, MALLOC_CAP_DMA);
-    assert(buf1);
-    static uint8_t *buf2 = (uint8_t*)heap_caps_malloc(LV_HOR_RES_MAX * 135, MALLOC_CAP_DMA);
-    assert(buf2);
+    static constexpr int drawBufSize = LV_HOR_RES_MAX * 70 * 2;
+    static void* buf1 = heap_caps_malloc(drawBufSize, MALLOC_CAP_DMA);
+    static void* buf2 = heap_caps_malloc(drawBufSize, MALLOC_CAP_DMA);
 
     lv_tick_set_cb(lv_tick);
     lvDisplay = lv_display_create(LV_HOR_RES_MAX, LV_VER_RES_MAX);
     lv_display_set_color_format(lvDisplay, LV_COLOR_FORMAT_RGB565);
     lv_display_set_flush_cb(lvDisplay, flush_cb);
-    lv_display_set_buffers(lvDisplay, buf1, buf2, LV_HOR_RES_MAX * 135, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    lv_display_set_buffers(lvDisplay, buf1, buf2, drawBufSize, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    lv_display_set_antialiasing(lvDisplay, true);
+
     /* Driver tastiera → keypad */
     kb_group = lv_group_create();
     lv_group_set_default(kb_group);

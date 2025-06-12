@@ -9,7 +9,6 @@
  *
  */
 #include "hal_cardputer.h"
-#include "display/hal_display.hpp"
 #include "common_define.h"
 #include "bat/adc_read.h"
 
@@ -19,6 +18,7 @@ void HalCardputer::_display_init()
 {
     _display = new M5GFX;
     _display->init();
+
     // Canvas
     /*_canvas = new LGFX_Sprite(_display);
     _canvas->createSprite(204, 109);

@@ -1,37 +1,42 @@
 #include "gui_system.hpp"
 #include "gui_widgets.hpp"
+#include "navigation.hpp"
 
+using namespace std;
 using namespace GUI;
 using namespace HAL;
 
-static void lv_event_cb(lv_event_t *e)
+/* Windows */
+static Window *test;
+static Window *home;
+
+static void test_cb(lv_event_t *e)
 {
-    lv_event_code_t code = lv_event_get_code(e);
-    if(code == LV_EVENT_CLICKED) 
-    {
-        uint8_t bat = hal()->getBatLevel();
-    	printf("Batt: %d\n", bat);
-    }
+    if(lv_event_get_code(e) == LV_EVENT_KEY)
+	{
+        Window *window = (Window *)lv_event_get_user_data(e);
+        uint32_t key = lv_indev_get_key(lv_indev_active());
+        
+        if(key == LV_KEY_ESC)
+        {
+            if(window->title != "Home")
+                home->show();
+        }
+	}
 }
 
 extern "C" void app_main()
 {
-    
     GUI::begin();
-    WindowConf conf = {
-        .header_height = 20, // Altezza dell'intestazione della finestra
-        .title = "Demo Window",
-        .bg_color = 0x0f40f2, // Colore di sfondo
-        .bg_color_gradient = 0x439cf0, // Colore di sfondo gradiente
-    };
-    Window *win = new Window(conf);
-    Carousel car(win);
-    car.addItem("Clock", &lv_event_cb);
-    car.addItem("Settings", lv_event_cb);
-    car.addItem("Apps", lv_event_cb);
-    car.addItem("Info", lv_event_cb);
-    win->show();
-    car.focus(0);
+
+    home = new Window();
+    home->title = "Home";
+
+    test = new Window();
+    test->title = "Test";
+    test->SetKeyboardCallback(test_cb);
+    
+    home->show();
 
     while(true)
     {

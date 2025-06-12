@@ -9,11 +9,10 @@
 //  *
 //  */
 // #pragma once
-// // #include <M5GFX.h>
-// // #include <lgfx/v1/panel/Panel_ST7789.hpp>
+// #include <M5GFX.h>
+// #include <lgfx/v1/panel/Panel_ST7789.hpp>
 
 // #define LGFX_USE_V1
-// #include <LovyanGFX.hpp>
 
 // #define LCD_MOSI_PIN 35
 // #define LCD_MISO_PIN -1

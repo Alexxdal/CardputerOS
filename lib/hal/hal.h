@@ -29,10 +29,6 @@ namespace HAL
     {
     protected:
         LGFX_Device* _display;
-        //LGFX_Sprite* _canvas;
-        //LGFX_Sprite* _canvas_system_bar;
-        //LGFX_Sprite* _canvas_keyboard_bar;
-
         KEYBOARD::Keyboard* _keyboard;
         m5::Mic_Class* _mic;
         m5::Speaker_Class* _speaker;
