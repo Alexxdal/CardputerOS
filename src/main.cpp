@@ -11,6 +11,7 @@ class HomeWindow : public Gui::Window {
 public:
     void onBuild(lv_obj_t* root) override;
     bool onKey(uint32_t key) override;
+    void onTick() override;
 
 private:
     void highlight(int idx);              ///< aggiorna lo stile selezione
@@ -57,6 +58,14 @@ void HomeWindow::onBuild(lv_obj_t* root)
     }
 
     highlight(sel_);                       // evidenzia la prima voce
+}
+
+static int dd = 0;
+void HomeWindow::onTick()
+{
+    lv_obj_t* tmp = lv_obj_get_child_by_type(items_.back(), 0, &lv_label_class);
+    lv_label_set_text(tmp, std::to_string(dd).c_str());
+    dd++;
 }
 
 /* -------------------- tastiera ---------------------------------------- */
@@ -115,8 +124,7 @@ void HomeWindow::highlight(int idx)
 
 static void gui_task(void*)
 {
-    Gui::Application::instance()
-        .run(std::make_shared<HomeWindow>());
+    Gui::Application::instance().run(std::make_shared<HomeWindow>());
     vTaskDelete(nullptr);
 }
 

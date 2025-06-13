@@ -9,9 +9,8 @@ class WindowManager;
 /// Classe base astratta per tutte le schermate
 class Window : public std::enable_shared_from_this<Window> {
 public:
-    lv_obj_t* root() const { return root_; }
     using Ptr = std::shared_ptr<Window>;
-    virtual ~Window() = default;
+    virtual ~Window();
 
     /// Costruisci il contenuto dentro `root` (screen appena creato)
     virtual void onBuild(lv_obj_t* root) = 0;
@@ -22,11 +21,17 @@ public:
     /// Mostra la finestra (chiamato solo da WindowManager)
     void show();
 
+    virtual uint32_t tickPeriod() const { return 500; }   // 0 = nessun tick
+    virtual void     onTick() {}  
+
     /// Chiude la finestra (chiede al manager di fare pop)
     void close();
 
+    lv_obj_t* root() const { return root_; }
+
 protected:
-    lv_obj_t* root_ = nullptr;        ///< Screen principale di LVGL
+    lv_obj_t*   root_{nullptr};
+    lv_timer_t* timer_{nullptr};
 };
 
 } // namespace Gui

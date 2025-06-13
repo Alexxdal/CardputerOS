@@ -25,6 +25,7 @@
 #define LV_USE_TEXTAREA      1
 #define LV_USE_KEYBOARD      1
 #define LV_USE_FLEX          1
+#define LV_USE_TIMER         1
 
 #define LV_FONT_MONTSERRAT_14    1
 #define LV_FONT_MONTSERRAT_16    1

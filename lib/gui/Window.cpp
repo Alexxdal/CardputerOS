@@ -1,5 +1,6 @@
 #include "Window.hpp"
 #include "WindowManager.hpp"
+#include <lvgl.h>
 
 namespace Gui {
 
@@ -15,10 +16,27 @@ static void lv_key_cb(lv_event_t* e) {
     }
 }
 
+Window::~Window()
+{
+    if (timer_) {
+        lv_timer_del(timer_);
+        timer_ = nullptr;
+    }
+}
+
 void Window::show() {
     root_ = lv_obj_create(nullptr);           // nuova screen “nuda”
     lv_obj_add_event_cb(root_, lv_key_cb, LV_EVENT_KEY, this);
     onBuild(root_);                           // chiama override
+
+    if (uint32_t p = tickPeriod()) {
+        timer_ = lv_timer_create(
+            [](lv_timer_t* t) {
+                auto* win = static_cast<Window*>(lv_timer_get_user_data(t));
+                win->onTick();
+            },
+            p, this);
+    }
 
     lv_scr_load(root_);                       // mostra
 }
