@@ -27,7 +27,7 @@ void WindowManager::pop() {
 
     // ri-mostra quella sotto
     lv_obj_clear_flag(stack_.back()->root(), LV_OBJ_FLAG_HIDDEN);
-    lv_scr_load(stack_.back()->root());
+    lv_scr_load_anim(stack_.back()->root(), LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 200, 0, true);
 }
 
 Window::Ptr WindowManager::current() const {

@@ -11,7 +11,7 @@ static void lv_key_cb(lv_event_t* e) {
     if (lv_event_get_code(e) == LV_EVENT_KEY) {
         uint32_t key = lv_indev_get_key(lv_indev_active());
         if (win->onKey(key)) {
-            lv_event_stop_bubbling(e);
+            //lv_event_stop_bubbling(e);
         }
     }
 }
