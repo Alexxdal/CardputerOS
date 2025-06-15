@@ -2,12 +2,36 @@
 #include "TestWindow.hpp"
 #include "Application.hpp"
 
+using namespace std;
+
 namespace Gui {
 
 lv_color_t BG      = lv_color_hex(0x101010);
 lv_color_t NORMAL  = lv_color_hex(0x303030);
 lv_color_t SELECT  = lv_color_hex(0x5050ff);
 
+static void btn_focus(lv_event_t* e)
+{
+    auto* btn = static_cast<lv_obj_t*>(lv_event_get_user_data(e));
+    lv_obj_set_style_bg_color(btn, SELECT, LV_PART_MAIN);
+}
+
+static void btn_defocus(lv_event_t* e)
+{
+    auto* btn = static_cast<lv_obj_t*>(lv_event_get_user_data(e));
+    lv_obj_set_style_bg_color(btn, NORMAL, LV_PART_MAIN);
+}
+
+static void btn_click(lv_event_t* e)
+{
+    auto* btn = static_cast<lv_obj_t*>(lv_event_get_user_data(e));
+    lv_obj_t* btn_text = lv_obj_get_child_by_type(btn, 0, &lv_label_class);
+
+    if(lv_strcmp(lv_label_get_text(btn_text), "File Manager") == 0)
+    {
+        Gui::WindowManager::instance().push(std::make_shared<TestWindow>());
+    }
+}
 
 void HomeWindow::onBuild(lv_obj_t* root)
 {
@@ -35,11 +59,11 @@ void HomeWindow::onBuild(lv_obj_t* root)
         auto* l  = lv_label_create(btn);
         lv_label_set_text(l, txt);
         lv_obj_center(l);
-
         items_.push_back(btn);
+        lv_obj_add_event_cb(btn, btn_focus, LV_EVENT_FOCUSED, btn);
+        lv_obj_add_event_cb(btn, btn_defocus, LV_EVENT_DEFOCUSED, btn);
+        lv_obj_add_event_cb(btn, btn_click, LV_EVENT_CLICKED, btn);
     }
-
-    highlight(sel_);
 }
 
 
@@ -49,60 +73,6 @@ void HomeWindow::onTick()
     lv_obj_t* tmp = lv_obj_get_child_by_type(items_.back(), 0, &lv_label_class);
     lv_label_set_text(tmp, std::to_string(dd).c_str());
     dd++;
-}
-
-
-bool HomeWindow::onKey(uint32_t key)
-{
-    switch (key) {
-    case LV_KEY_DOWN:
-        if (sel_ + 1 < static_cast<int>(items_.size())) {
-            ++sel_;
-            highlight(sel_);
-        }
-        return true;
-
-    case LV_KEY_UP:
-        if (sel_ > 0) {
-            --sel_;
-            highlight(sel_);
-        }
-        return true;
-
-    case LV_KEY_ENTER:
-        // azioni demo sulle singole voci
-        if (sel_ == 0) {
-            /* apri File Manager */
-            Gui::WindowManager::instance().push(std::make_shared<TestWindow>());
-        } else if (sel_ == 1) {
-            /* Settings */
-        } else if (sel_ == 2) {
-            /* About */
-        } else if (sel_ == 3) {
-            /* Reboot */
-        }
-        return true;
-    
-    case 96:
-        close();                 // chiede al manager di fare pop()
-        return true;             // evento gestito
-
-    default:
-        return false;
-    }
-}
-
-
-void HomeWindow::highlight(int idx)
-{
-    for (size_t i = 0; i < items_.size(); ++i) {
-        lv_obj_set_style_bg_color(items_[i],
-                                  i == static_cast<size_t>(idx) ? SELECT : NORMAL,
-                                  LV_PART_MAIN);
-    }
-
-    /* assicura che la riga visibile resti sempre nel display */
-    lv_obj_scroll_to_view_recursive(items_[idx], LV_ANIM_OFF);
 }
 
 }

@@ -84,6 +84,7 @@ static void kb_read(lv_indev_t *indev_driver, lv_indev_data_t *data)
         }
         data->state = LV_INDEV_STATE_PRESSED;
         data->key   = last_key;
+        //Gui::WindowManager::instance().dispatchKey(last_key);
     } else {
         // Rilascio del tasto (mantieni l'ultimo valore)
         data->state = LV_INDEV_STATE_RELEASED;

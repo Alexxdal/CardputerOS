@@ -7,7 +7,6 @@ namespace Gui {
 class HomeWindow : public Gui::Window {
 public:
     void onBuild(lv_obj_t* root) override;
-    bool onKey(uint32_t key) override;
     void onTick() override;
 
 private:

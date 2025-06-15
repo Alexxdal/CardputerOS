@@ -1,4 +1,5 @@
 #include "WindowManager.hpp"
+#include "Application.hpp"
 #include <lvgl.h>
 
 namespace Gui {
@@ -11,10 +12,6 @@ WindowManager& WindowManager::instance() {
 void WindowManager::push(Window::Ptr win) {
     if (!win) return;
 
-    if (!stack_.empty()) {
-        lv_obj_add_flag(stack_.back()->root(), LV_OBJ_FLAG_HIDDEN);
-    }
-
     stack_.push_back(std::move(win));
     stack_.back()->show();
 }
@@ -22,12 +19,23 @@ void WindowManager::push(Window::Ptr win) {
 void WindowManager::pop() {
     if (stack_.size() <= 1) return;          // non rimuovere l’ultima
 
-    // distrugge la screen corrente tramite Window::~Window (smart-ptr)
-    stack_.pop_back();
+    auto closing = stack_.back();
+    auto previous = stack_[stack_.size() - 2];
 
-    // ri-mostra quella sotto
-    lv_obj_clear_flag(stack_.back()->root(), LV_OBJ_FLAG_HIDDEN);
-    lv_scr_load_anim(stack_.back()->root(), LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 200, 0, true);
+    lv_scr_load_anim(previous->root(), LV_SCR_LOAD_ANIM_MOVE_BOTTOM, 200, 0, true);
+
+    if (Gui::Application::instance().inputGroup()) {
+        lv_group_focus_obj(previous->root());
+    }
+
+    closing->detachRoot(); 
+    stack_.pop_back();
+}
+
+bool WindowManager::dispatchKey(uint32_t key)
+{
+    if(stack_.empty()) return false;
+    return stack_.back()->onKey(key);          // solo la finestra in cima allo stack
 }
 
 Window::Ptr WindowManager::current() const {

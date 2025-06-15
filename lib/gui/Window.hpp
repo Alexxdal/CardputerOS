@@ -48,6 +48,7 @@ public:
     void close();
 
     lv_obj_t* root() const { return root_; }
+    void detachRoot() { root_ = nullptr; }
 
 protected:
     lv_obj_t*   root_{nullptr};

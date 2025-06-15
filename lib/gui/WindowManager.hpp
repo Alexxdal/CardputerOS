@@ -12,6 +12,7 @@ public:
     void push(Window::Ptr win);    ///< Mostra nuova finestra
     void pop();                    ///< Torna indietro (se >1)
     Window::Ptr current() const;
+    bool dispatchKey(uint32_t key);
 
 private:
     WindowManager() = default;
